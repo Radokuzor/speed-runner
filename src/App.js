@@ -9,7 +9,7 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: "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",
+  apiKey: "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",
   dangerouslyAllowBrowser: true
 });
 
@@ -17,35 +17,59 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [response, setResponse] = useState("");
+  const [selectedText, setSelectedText] = useState("");
+  let count = 0;
 
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "saveText") {
-    console.log("call saveText from app.js with msg:", message.text);
-    setPrompt(message.text);
-    handleSubmit(message.text)
-  } else if (message.action === "checkText") {
+  useEffect(() => {
+    const fetchData = () => {
+      // Listen for messages from the background script
+      chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+        if (request.action === "updateSelectedText") {
+          const updatedSelectedText = request.selectedText.data;
+          console.log("Updated selected text in app.js:", updatedSelectedText.data);
+          count++;
+          if (updatedSelectedText) {
+            setSelectedText(updatedSelectedText);
+            setPrompt(updatedSelectedText);
+            handleSubmit("Summarize this paragraph easy enough for a 5th grader to understand and in as few words as possible: ", updatedSelectedText);
+            console.log("trying to request selectedText in app.js selectedTxt = ", updatedSelectedText);
+          } else if (count < 10) {
+            // If selectedTextData is empty or undefined, wait and fetch again
+            setTimeout(fetchData, 1000); // Adjust the delay as needed
+          }
+        }
+      });
+    }
+  fetchData();
+  }, []); 
 
-  }
-  });
-  
 
-  // useEffect(() => {
-  //   try {
-  //     chrome.storage.local.get(null, function (data) {
-  //       if ("prompt" in data) {
-  //         setPrompt(data.prompt);
-  //       }
-  //     });
-  //   } catch (e) {
-  //     console.log("Error due to local state");
-  //   }
-  // }, []);
+  useEffect(() => {
+  const fetchData = () => {
+    // Request selected text from background.js
+    chrome.runtime.sendMessage({ message: "setSelectedText" }, function(response) {
+      const selectedTextData = response.selectedText.data;
+      count++;
+      if (selectedTextData) {
+        setSelectedText(selectedTextData);
+        setPrompt(selectedTextData);
+        handleSubmit("Summarize this paragraph easy enough for a 5th grader to understand and in as few words as possible: ", selectedTextData);
+        console.log("trying to request selectedText in app.js selectedTxt = ", selectedTextData);
+      } else if (count < 25) {
+        // If selectedTextData is empty or undefined, wait and fetch again
+        setTimeout(fetchData, 1000); // Adjust the delay as needed
+      }
+    });
+  };
 
-  async function handleSubmit(text = "") {
+  fetchData(); // Initial call to start fetching data
+  }, []);
+
+  async function handleSubmit(buttonQ = "", paragraph = "") {
     setIsLoading(true);
-    let excerpt = text === "" ? prompt : text;
-    console.log("here's the excerpt", excerpt)
-    const question = `Summarize this paragraph easy enough for a 5th grader and in as few words as possible: ${excerpt}?`;
+    let backupPrompt = prompt === "" ? paragraph : prompt;
+    console.log("here's the prompt", backupPrompt)
+    const question = `${buttonQ} ${backupPrompt}?`;
     const chatCompletion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [{ "role": "user", "content": question }],
@@ -65,7 +89,7 @@ function App() {
       <Box sx={{ width: "100%", mt: 4 }}>
         <Grid container>
           <Grid item xs={12}>
-            <h1> Welcome to smarter reader</h1>
+            <h1> Welcome to Smarter Reader</h1>
             <TextField
               fullWidth
               autoFocus
@@ -80,11 +104,12 @@ function App() {
                 // chrome.storage.local.set({ prompt: e.target.value });
               }}
             />
-            <Button
+            <Grid container style={{ padding: '20px' }}>
+              <Button
               fullWidth
               disableElevation
               variant="contained"
-              onClick={() => handleSubmit()}
+              onClick={() => handleSubmit("Summarize this paragraph easy enough for a 5th grader to understand and in as few words as possible: ")}
               disabled={isLoading}
               startIcon={
                 isLoading && (
@@ -104,11 +129,72 @@ function App() {
                 )
               }
             >
-              Submit
+              Explain Quick
             </Button>
+            </Grid>
+
+            <Grid container style={{ padding: '20px' }}>
+              <Button
+              fullWidth
+              disableElevation
+              variant="contained"
+              onClick={() => handleSubmit("Explain this paragraph to me as though i were a 5th grader and help me understand it in detail as best as possible ")}
+              disabled={isLoading}
+              startIcon={
+                isLoading && (
+                  <AutorenewIcon
+                    sx={{
+                      animation: "spin 2s linear infinite",
+                      "@keyframes spin": {
+                        "0%": {
+                          transform: "rotate(360deg)",
+                        },
+                        "100%": {
+                          transform: "rotate(0deg)",
+                        },
+                      },
+                    }}
+                  />
+                )
+              }
+            >
+              Explain In Detail
+            </Button>
+            </Grid>
+
+            <Grid container style={{ padding: '20px' }}>
+              <Button
+              fullWidth
+              disableElevation
+              variant="contained"
+              onClick={() => handleSubmit("Give me a college level answer response to this free response question in as few words as possible: ")}
+              disabled={isLoading}
+              startIcon={
+                isLoading && (
+                  <AutorenewIcon
+                    sx={{
+                      animation: "spin 2s linear infinite",
+                      "@keyframes spin": {
+                        "0%": {
+                          transform: "rotate(360deg)",
+                        },
+                        "100%": {
+                          transform: "rotate(0deg)",
+                        },
+                      },
+                    }}
+                  />
+                )
+              }
+            >
+              Answer Free Response Question
+            </Button>
+            </Grid>
           </Grid>
           <Grid>
-            <p>{response}</p>
+            <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '1.5em', lineHeight: '1.6' }}>{response}</p>
+
+            {/* <p>{response}</p> */}
           </Grid>
         </Grid>
       </Box>
@@ -117,3 +203,7 @@ function App() {
 }
 
 export default App;
+
+//
+//
+//select the correct answer to the question from the multiple choice options and explain as though you were talking to a 5th grader and in as few words as possible why the answer is correct, here's the question and multiple choices:

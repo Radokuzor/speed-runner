@@ -1,11 +1,11 @@
 {
     "manifest_version": 3,
     "name": "Smarter Reader",
-    "description": "Desc",
+    "description": "Your 4.0 Solution",
     "version": "1.0.0",
     "action": {
         "default_popup": "index.html",
-        "default_title": "Smarter Reader"
+        "default_title": "4.0 hero"
     },
     "icons": {
         "16": "icon.png",
@@ -15,7 +15,8 @@
     "permissions": [
         "scripting",
         "activeTab",
-        "storage"
+        "storage",
+        "contextMenus"
     ],
     "host_permissions": [
         "https://*/"

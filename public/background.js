@@ -1,63 +1,94 @@
 let savedTexts = [];
+let selectedText = "";
 
-chrome.runtime.onInstalled.addListener(() => {
-  console.log("Text Saver extension installed!");
+chrome.runtime.onInstalled.addListener(function() {
+  chrome.contextMenus.create({
+    title: "Explain This",
+    contexts: ["page","selection"],
+    id: "openExtension"
+  });
 });
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "saveText") {
-    // saveText(message.text);
-  } else if (message.action === "checkText") {
-    sendResponse(savedTexts);
-  }
-});
+function handleDisconnect(port) {
+  console.log("Port disconnected");
 
-async function saveText(text) {
-  // send to chat 
-  const apiKey = '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';
-  const apiUrl = 'https://api.openai.com/v1/engines/davinci/completions';
+  // Attempt to establish a new connection
+  const newPort = establishConnection();
 
-  try {
-    const question = `Summarize this paragraph for me in simpler terms: ${text}?`;
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        prompt: question,
-        max_tokens: 50,  // Adjust as needed
-      }),
-    });
-
-    console.log('Here is the prompt:', question);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    // Check if 'choices' property is present and has at least one element
-    const chatGptResponse = data.choices && data.choices.length > 0
-      ? data.choices[0].text
-      : 'No response from ChatGPT';
-
-    // Optionally, you can do something with the ChatGPT response, such as log it or display it.\
-    
-    console.log('ChatGPT Response:', chatGptResponse);
-
-    // Notify the popup to update with the latest saved texts
-    savedTexts = []
-    savedTexts.push(chatGptResponse);
-    console.log('saved Texts:', savedTexts);
-    chrome.runtime.sendMessage({ action: "updatePopup", texts: savedTexts});
-  } catch (error) {
-    console.error('Error fetching from ChatGPT API:', error.message);
-
-    // Handle the error as needed
-    chrome.runtime.sendMessage({ action: "updatePopup", texts: 'Error fetching from ChatGPT API' });
-  }
+  // Optionally, you can transfer any state or data from the old port to the new one
+  // For example: newPort.state = port.state;
 }
 
+chrome.runtime.onConnect.addListener(function(port) {
+  console.assert(port.name === "content-script");
+
+  // Listen for disconnect events
+  port.onDisconnect.addListener(function() {
+    handleDisconnect(port);
+  });
+
+  // ... rest of the code
+});
+
+
+chrome.contextMenus.onClicked.addListener(function(info, tab) {
+  if (info.menuItemId === "openExtension") {
+    console.log("popup opened")
+    // chrome.windows.create({
+    //   url: chrome.runtime.getURL("index.html"),
+    //   type: "popup",
+    //   width: 800,
+    //   height: 600
+    // });
+
+     window.open("index.html", "Popup", "width=400,height=400");
+  }
+});
+
+// Expose selectedText to content scripts
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.message === "setSelectedText") {
+    console.log("getSelectedText call heard by background now send: selectedText = ", selectedText)
+    sendResponse({ selectedText: selectedText });
+  }
+});
+
+
+chrome.runtime.onConnect.addListener(function(port) {
+  console.assert(port.name === "content-script");
+
+  // Listen for messages from the content script
+  port.onMessage.addListener(function(message) {
+    console.log("Received message in background script22:", message);
+    selectedText = message;
+    chrome.runtime.sendMessage({ action: "updateSelectedText", selectedText: selectedText });
+    // Process the message and send a response if needed
+    const response = { result: "Response from background script" };
+    port.postMessage(response);
+  });
+});
+
+chrome.runtime.onConnect.addListener(function(port) {
+  console.assert(port.name === "content-script2");
+
+  // Listen for messages from the content script
+  port.onMessage.addListener(function(message) {
+    console.log("Received message in background script22:", message);
+    selectedText = message;
+    chrome.runtime.sendMessage({ action: "updateSelectedText", selectedText: selectedText });
+    // Process the message and send a response if needed
+    const response = { result: "Response from background script" };
+    port.postMessage(response);
+  });
+});
+
+chrome.storage.onChanged.addListener(function(changes, area) {
+  if (area === "local" && changes.selectedText) {
+    let newText = changes.selectedText.newValue;
+    console.log("New selected text received in background.js:", newText);
+    // Additional handling code can go here
+    chrome.runtime.sendMessage({ action: "updateSelectedText", selectedText: newText });
+  }
+});
+
+// Additional background script logic
