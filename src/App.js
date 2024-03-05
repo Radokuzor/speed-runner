@@ -9,7 +9,7 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: "sk-AW1T2IUvaBF0eResCHn1T3BlbkFJgv2IoG0",
+  apiKey: "sk-v1hrp8VUMq5JNMq6X2YeT3BlbkFJgYgOtFjVW0gEf3Kp47",
   dangerouslyAllowBrowser: true
 });
 
