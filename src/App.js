@@ -2,14 +2,14 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
 
-import { Box, Button, Container, Grid, Paper, TextField } from "@mui/material";
+import { Box, Button, Container, Grid, Chip, TextField } from "@mui/material";
 
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: "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",
+  apiKey: "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",
   dangerouslyAllowBrowser: true
 });
 
@@ -18,7 +18,11 @@ function App() {
   const [prompt, setPrompt] = useState("");
   const [response, setResponse] = useState("");
   const [selectedText, setSelectedText] = useState("");
+  const [selectedKeywords, setSelectedKeywords] = useState([]);
   let count = 0;
+
+  // Define all possible keywords
+  const allKeywords = ["Property Address:", "Monthly Payment:", "Pet Policy:", "Smoking Policy:", "Utilities:", "Association Approval:", "Maintenance:"];
 
   useEffect(() => {
     const fetchData = () => {
@@ -65,11 +69,20 @@ function App() {
   fetchData(); // Initial call to start fetching data
   }, []);
 
-  async function handleSubmit(buttonQ = "", paragraph = "") {
+  
+
+  async function handleSubmit(buttonQ = "", paragraph = "", isRealtorDoc = false, selectedKeywords = ["property address:"]) {
     setIsLoading(true);
+   
+    // Construct the dynamic question part based on selectedKeywords
+    const dynamicQuestionPart = selectedKeywords.join(", ");
+
+    // property address:, Lease Term: , monthly payment:, pet policy: smoking policy:, who is covering utilities:, association approval: and maintenance: information on this contract \n\n
     let backupPrompt = prompt === "" ? paragraph : prompt;
     console.log("here's the prompt", backupPrompt)
-    const question = `${buttonQ} ${backupPrompt}?`;
+
+    const question = isRealtorDoc ? `${buttonQ} ${dynamicQuestionPart} information on this contract: ${backupPrompt}?` : `${buttonQ} ${backupPrompt}?`;
+    
     const chatCompletion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [{ "role": "user", "content": question }],
@@ -83,6 +96,35 @@ function App() {
     
     setIsLoading(false);
   }
+
+  // Function to handle keyword selection toggle
+  const toggleKeywordSelection = (keyword) => {
+    setSelectedKeywords(prevSelectedKeywords =>
+      prevSelectedKeywords.includes(keyword)
+        ? prevSelectedKeywords.filter(kw => kw !== keyword)
+        : [...prevSelectedKeywords, keyword]
+    );
+  };
+
+  function formatParagraph(paragraph, keywords) {
+  const regex = new RegExp(`(${keywords.join('|')})`, "gi");
+  const parts = paragraph.split(regex);
+
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (keywords.some(keyword => new RegExp(keyword, "gi").test(part))) {
+          // Keyword found, apply formatting
+          return <React.Fragment key={index}><br /><strong><u>{part}</u></strong></React.Fragment>;
+        } else {
+          // Not a keyword, return normal text
+          return part;
+        }
+      })}
+    </>
+  );
+}
+
 
   return (
     <Container>
@@ -104,6 +146,47 @@ function App() {
                 // chrome.storage.local.set({ prompt: e.target.value });
               }}
             />
+
+            <div style={{ margin: "20px 0" }}>
+              {allKeywords.map((keyword) => (
+                <Chip
+                  key={keyword}
+                  label={keyword}
+                  onClick={() => toggleKeywordSelection(keyword)}
+                  color={selectedKeywords.includes(keyword) ? "primary" : "default"}
+                  variant="outlined"
+                  style={{ margin: "5px" }}
+                />
+              ))}
+            </div>
+            <Grid container style={{ padding: '20px' }}>
+              <Button
+              fullWidth
+              disableElevation
+              variant="contained"
+              onClick={() => handleSubmit("answer the following questions about this document:\n  what is the ", "", true, selectedKeywords)}
+              disabled={isLoading}
+              startIcon={
+                isLoading && (
+                  <AutorenewIcon
+                    sx={{
+                      animation: "spin 2s linear infinite",
+                      "@keyframes spin": {
+                        "0%": {
+                          transform: "rotate(360deg)",
+                        },
+                        "100%": {
+                          transform: "rotate(0deg)",
+                        },
+                      },
+                    }}
+                  />
+                )
+              }
+            >
+              Summarize Document
+            </Button>
+            </Grid>
             <Grid container style={{ padding: '20px' }}>
               <Button
               fullWidth
@@ -192,9 +275,9 @@ function App() {
             </Grid>
           </Grid>
           <Grid>
-            <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '1.5em', lineHeight: '1.6' }}>{response}</p>
-
-            {/* <p>{response}</p> */}
+            <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '1.5em', lineHeight: '1.6' }}>
+               {formatParagraph(response, selectedKeywords)}
+            </div>
           </Grid>
         </Grid>
       </Box>
