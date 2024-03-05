@@ -9,7 +9,7 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: "sk-AW1T2IUvaBF0eResCHn1T3BlbkFJgv2IoG0",
+  apiKey: "sk-zAxdBHR62FRz2ocS3ZJFT3BlbkFJ8ZCJkwHoxO3WFaCk4qD",
   dangerouslyAllowBrowser: true
 });
 
@@ -146,19 +146,65 @@ function App() {
                 // chrome.storage.local.set({ prompt: e.target.value });
               }}
             />
+          
+             <Grid container style={{ padding: '20px' }}>
+              <Button
+              fullWidth
+              disableElevation
+              variant="contained"
+              onClick={() => handleSubmit("assume you are a real estate agent, suggest the answers to these questions: ")}
+              disabled={isLoading}
+              startIcon={
+                isLoading && (
+                  <AutorenewIcon
+                    sx={{
+                      animation: "spin 2s linear infinite",
+                      "@keyframes spin": {
+                        "0%": {
+                          transform: "rotate(360deg)",
+                        },
+                        "100%": {
+                          transform: "rotate(0deg)",
+                        },
+                      },
+                    }}
+                  />
+                )
+              }
+            >
+              Market intelligence
+            </Button>
+            </Grid>
 
-            <div style={{ margin: "20px 0" }}>
-              {allKeywords.map((keyword) => (
-                <Chip
-                  key={keyword}
-                  label={keyword}
-                  onClick={() => toggleKeywordSelection(keyword)}
-                  color={selectedKeywords.includes(keyword) ? "primary" : "default"}
-                  variant="outlined"
-                  style={{ margin: "5px" }}
-                />
-              ))}
-            </div>
+            <Grid container style={{ padding: '20px' }}>
+              <Button
+              fullWidth
+              disableElevation
+              variant="contained"
+              onClick={() => handleSubmit("respond to this email above like a real estate agent called John Doe: ")}
+              disabled={isLoading}
+              startIcon={
+                isLoading && (
+                  <AutorenewIcon
+                    sx={{
+                      animation: "spin 2s linear infinite",
+                      "@keyframes spin": {
+                        "0%": {
+                          transform: "rotate(360deg)",
+                        },
+                        "100%": {
+                          transform: "rotate(0deg)",
+                        },
+                      },
+                    }}
+                  />
+                )
+              }
+            >
+              Respond to email
+            </Button>
+            </Grid>
+
             <Grid container style={{ padding: '20px' }}>
               <Button
               fullWidth
@@ -185,94 +231,22 @@ function App() {
               }
             >
               Summarize Document
-            </Button>
-            </Grid>
-            <Grid container style={{ padding: '20px' }}>
-              <Button
-              fullWidth
-              disableElevation
-              variant="contained"
-              onClick={() => handleSubmit("Summarize this paragraph easy enough for a 5th grader to understand and in as few words as possible: ")}
-              disabled={isLoading}
-              startIcon={
-                isLoading && (
-                  <AutorenewIcon
-                    sx={{
-                      animation: "spin 2s linear infinite",
-                      "@keyframes spin": {
-                        "0%": {
-                          transform: "rotate(360deg)",
-                        },
-                        "100%": {
-                          transform: "rotate(0deg)",
-                        },
-                      },
-                    }}
-                  />
-                )
-              }
-            >
-              Explain Quick
-            </Button>
+              </Button>
+              
+              <div style={{ margin: "20px 0" }}>
+              {allKeywords.map((keyword) => (
+                <Chip
+                  key={keyword}
+                  label={keyword}
+                  onClick={() => toggleKeywordSelection(keyword)}
+                  color={selectedKeywords.includes(keyword) ? "primary" : "default"}
+                  variant="outlined"
+                  style={{ margin: "5px" }}
+                />
+              ))}
+            </div>
             </Grid>
 
-            <Grid container style={{ padding: '20px' }}>
-              <Button
-              fullWidth
-              disableElevation
-              variant="contained"
-              onClick={() => handleSubmit("Explain this paragraph to me as though i were a 5th grader and help me understand it in detail as best as possible ")}
-              disabled={isLoading}
-              startIcon={
-                isLoading && (
-                  <AutorenewIcon
-                    sx={{
-                      animation: "spin 2s linear infinite",
-                      "@keyframes spin": {
-                        "0%": {
-                          transform: "rotate(360deg)",
-                        },
-                        "100%": {
-                          transform: "rotate(0deg)",
-                        },
-                      },
-                    }}
-                  />
-                )
-              }
-            >
-              Explain In Detail
-            </Button>
-            </Grid>
-
-            <Grid container style={{ padding: '20px' }}>
-              <Button
-              fullWidth
-              disableElevation
-              variant="contained"
-              onClick={() => handleSubmit("Give me a college level answer response to this free response question in as few words as possible: ")}
-              disabled={isLoading}
-              startIcon={
-                isLoading && (
-                  <AutorenewIcon
-                    sx={{
-                      animation: "spin 2s linear infinite",
-                      "@keyframes spin": {
-                        "0%": {
-                          transform: "rotate(360deg)",
-                        },
-                        "100%": {
-                          transform: "rotate(0deg)",
-                        },
-                      },
-                    }}
-                  />
-                )
-              }
-            >
-              Answer Free Response Question
-            </Button>
-            </Grid>
           </Grid>
           <Grid>
             <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '1.5em', lineHeight: '1.6' }}>
