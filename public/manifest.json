@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "Smarter Reader",
+    "name": "Copilot Realtor",
     "description": "Your 4.0 Solution",
     "version": "1.0.0",
     "action": {
@@ -14,12 +14,9 @@
     },
     "permissions": [
         "scripting",
-        "activeTab",
+        
         "storage",
         "contextMenus"
-    ],
-    "host_permissions": [
-        "https://*/"
     ],
     "content_scripts": [
       {

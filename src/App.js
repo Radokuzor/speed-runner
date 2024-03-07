@@ -9,7 +9,7 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: "sk-zAxdBHR62FRz2ocS3ZJFT3BlbkFJ8ZCJkwHoxO3WFaCk4qD",
+  apiKey: process.env.REACT_APP_chatGPT_API_Key_Dev,
   dangerouslyAllowBrowser: true
 });
 
@@ -69,8 +69,6 @@ function App() {
   fetchData(); // Initial call to start fetching data
   }, []);
 
-  
-
   async function handleSubmit(buttonQ = "", paragraph = "", isRealtorDoc = false, selectedKeywords = ["property address:"]) {
     setIsLoading(true);
    
@@ -91,6 +89,20 @@ function App() {
     });
     console.log("here's the prompt", question)
     console.log("here's chats repsonse", chatCompletion.choices[0].message.content);
+
+  const options = {
+  method: 'POST',
+  headers: {
+    authorization: process.env.REACT_APP_bland_API_Key_Dev,
+    'Content-Type': 'application/json'
+  },
+  body: '{"phone_number":"2142549989","task":"call me as a car sales man attempting to sell a model x 2023"}'
+};
+
+fetch('https://api.bland.ai/v1/calls', options)
+  .then(response => response.json())
+  .then(response => console.log(response))
+  .catch(err => console.error(err));
 
     setResponse(chatCompletion.choices[0].message.content);
     
